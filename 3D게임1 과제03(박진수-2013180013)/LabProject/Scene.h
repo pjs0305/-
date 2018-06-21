@@ -2,14 +2,11 @@
 
 #include "GameObject.h"
 #include "Player.h"
-
+#include "Timer.h"
 
 class CScene
 {
 public:
-	CScene();
-	virtual ~CScene();
-
 	CPlayer							*m_pPlayer = NULL;
 
 	std::vector<CEnemyObject*>		m_vObjects;
@@ -33,8 +30,6 @@ public:
 	XMFLOAT3 m_direction[7] = { XMFLOAT3(1, 0, 0), XMFLOAT3(1, 1, 0), XMFLOAT3(0, 1, 0),
 		XMFLOAT3(0, 1, 1), XMFLOAT3(0, 0, 1), XMFLOAT3(1, 0, 1), XMFLOAT3(1, 1, 1)};
 
-	virtual void BuildObjects();
-	virtual void ReleaseObjects();
 
 	virtual void CheckObjectByObjectCollisions();
 	virtual void CheckObjectByWallCollisions();
@@ -44,15 +39,32 @@ public:
 
 	void CheckPlayerColor();
 
-	virtual void Animate(float fElapsedTime);
-	virtual void Render(HDC hDCFrameBuffer, CCamera *pCamera);
 
-	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
-	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void CreateEnemy(int EnemyType);
 	void UseItem();
 	void Picking();
 	void ClearObject();
+
+	///////////////////////////////// New
+	CScene();
+	~CScene();
+	
+	bool OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+	bool OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
+
+	void BuildObjects(ID3D12Device *pd3dDevice);
+	void ReleaseObjects();
+
+	bool ProcessInput();
+	void AnimateObjects(float fElapsedTime);
+	void Render(ID3D12GraphicsCommandList *pd3dCommandList);
+
+	//루트 시그너쳐를 나타내는 인터페이스 포인터이다.
+	ID3D12RootSignature *m_pd3dGraphicsRootSignature;
+	
+	//파이프라인 상태를 나타내는 인터페이스 포인터이다.
+	ID3D12PipelineState *m_pd3dPipelineState;
+	
 };
 

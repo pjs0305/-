@@ -67,7 +67,7 @@ private:
 	
 	//펜스 인터페이스 포인터, 펜스의 값, 이벤트 핸들이다.
 	ID3D12Fence *m_pd3dFence;
-	UINT64 m_nFenceValue;
+	UINT64 m_nFenceValues[m_nSwapChainBuffers];
 	HANDLE m_hFenceEvent;
 	
 	//뷰포트와 씨저 사각형이다. 
@@ -123,7 +123,9 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
-	//////////////////////////////////////////////////////////////// New
 	void OnResizeBackBuffers();
+
+	//////////////////////////////////////////////////////////////// New
+	void MoveToNextFrame();
 };
 

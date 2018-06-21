@@ -83,6 +83,7 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="ReadMe.txt" />
+    <None Include="Shader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="LabProject.rc">
