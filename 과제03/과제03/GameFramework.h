@@ -2,6 +2,7 @@
 
 #include "Timer.h"
 #include "Scene.h"
+#include "Camera.h"
 
 class CGameFramework
 {
@@ -102,5 +103,7 @@ public:
 	void OnResizeBackBuffers();
 
 	void MoveToNextFrame();
+
+	CCamera *m_pCamera = NULL;
 };
 
