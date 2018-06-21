@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Timer.h"
+#include "Scene.h"
 
 class CGameFramework
 {
@@ -48,8 +49,8 @@ private:
 	ID3D12PipelineState *m_pd3dPipelineState;
 
 	//펜스 인터페이스 포인터, 펜스의 값, 이벤트 핸들이다.
-	ID3D12Fence *m_pd3dFence;
-	UINT64 m_nFenceValue;
+	ID3D12Fence *m_pd3dFence; 
+	UINT64 m_nFenceValues[m_nSwapChainBuffers];
 	HANDLE m_hFenceEvent;
 
 #if defined(_DEBUG)
@@ -63,6 +64,8 @@ private:
 	// 프레임 레이트
 	CGameTimer					m_GameTimer;
 	_TCHAR						m_pszFrameRate[50];
+
+	CScene *m_pScene;
 public:
 	CGameFramework();
 	~CGameFramework();
@@ -97,5 +100,7 @@ public:
 	LRESULT CALLBACK OnProcessingWindowMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam);
 
 	void OnResizeBackBuffers();
+
+	void MoveToNextFrame();
 };
 

@@ -20,7 +20,8 @@ CGameFramework::CGameFramework()
 	m_nSwapChainBufferIndex = 0;
 	m_hFenceEvent = NULL;
 	m_pd3dFence = NULL;
-	m_nFenceValue = 0;
+	for (int i = 0; i < m_nSwapChainBuffers; i++) m_nFenceValues[i] = 0;
+	m_pScene = NULL;
 	m_nWndClientWidth = FRAME_BUFFER_WIDTH;
 	m_nWndClientHeight = FRAME_BUFFER_HEIGHT;
 
@@ -162,7 +163,6 @@ void CGameFramework::CreateDirect3DDevice()
 //펜스를 생성하고 펜스 값을 0으로 설정한다. 
 	m_pd3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, __uuidof(ID3D12Fence), (void
 	**)&m_pd3dFence);
-	m_nFenceValue = 0;
 
 /*펜스와 동기화를 위한 이벤트 객체를 생성한다(이벤트 객체의 초기값을 FALSE이다). 
 이벤트가 실행되면(Signal) 이벤트의 값을 자동적으로 FALSE가 되도록 생성한다.*/
@@ -287,11 +287,19 @@ void CGameFramework::CreateDepthStencilView()
 
 void CGameFramework::BuildObjects()
 {
+	m_pScene = new CScene();
+	if (m_pScene) m_pScene->BuildObjects(m_pd3dDevice);
+
 	m_GameTimer.Reset();
 }
 
 void CGameFramework::ReleaseObjects()
 {
+	if (m_pScene)
+	{
+		m_pScene->ReleaseObjects();
+		delete m_pScene;
+	}
 }
 
 void CGameFramework::OnProcessingMouseMessage(HWND hWnd, UINT nMessageID, WPARAM wParam, LPARAM lParam)
@@ -397,21 +405,21 @@ void CGameFramework::ProcessInput()
 
 void CGameFramework::AnimateObjects()
 {
+	if (m_pScene) m_pScene->AnimateObjects(m_GameTimer.GetTimeElapsed());
 }
 
 void CGameFramework::WaitForGpuComplete()
 {
 	//CPU 펜스의 값을 증가한다. 
-	m_nFenceValue++;
+	UINT64 nFenceValue = ++m_nFenceValues[m_nSwapChainBufferIndex];
 
 	//GPU가 펜스의 값을 설정하는 명령을 명령 큐에 추가한다. 
-	const UINT64 nFence = m_nFenceValue;
-	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFence);
+	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFenceValue);
 
 	//펜스의 현재 값이 설정한 값보다 작으면 펜스의 현재 값이 설정한 값이 될 때까지 기다린다.
-	if (m_pd3dFence->GetCompletedValue() < nFence)
+	if (m_pd3dFence->GetCompletedValue() < nFenceValue)
 	{
-		hResult = m_pd3dFence->SetEventOnCompletion(nFence, m_hFenceEvent);
+		hResult = m_pd3dFence->SetEventOnCompletion(nFenceValue, m_hFenceEvent);
 		::WaitForSingleObject(m_hFenceEvent, INFINITE);
 	}
 }
@@ -470,9 +478,11 @@ void CGameFramework::FrameAdvance()
 	&d3dDsvCPUDescriptorHandle);
 
 
-	//렌더링 코드는 여기에 추가될 것이다. 
+	/////////////// 렌더링 코드는 여기에 추가될 것이다.  ///////////////
 
-	///////////////////////////////////
+	if (m_pScene) m_pScene->Render(m_pd3dCommandList);
+
+	//////////////////////////////////////////////////////////////////
 
 
 	/*현재 렌더 타겟에 대한 렌더링이 끝나기를 기다린다. 
@@ -487,21 +497,16 @@ void CGameFramework::FrameAdvance()
 
 	//명령 리스트를 명령 큐에 추가하여 실행한다.
 	ID3D12CommandList *ppd3dCommandLists[] = { m_pd3dCommandList };
-	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
+	m_pd3dCommandQueue->ExecuteCommandLists(_countof(ppd3dCommandLists), ppd3dCommandLists);
 
 	//GPU가 모든 명령 리스트를 실행할 때 까지 기다린다. 
 	WaitForGpuComplete();
 
 	/*스왑체인을 프리젠트한다. 
 	프리젠트를 하면 현재 렌더 타겟(후면버퍼)의 내용이 전면버퍼로 옮겨지고 렌더 타겟 인덱스가 바뀔 것이다.*/
-	DXGI_PRESENT_PARAMETERS dxgiPresentParameters;
-	dxgiPresentParameters.DirtyRectsCount = 0;
-	dxgiPresentParameters.pDirtyRects = NULL;
-	dxgiPresentParameters.pScrollRect = NULL;
-	dxgiPresentParameters.pScrollOffset = NULL;
-	m_pdxgiSwapChain->Present1(1, 0, &dxgiPresentParameters);
+	m_pdxgiSwapChain->Present(0, 0);
 
-	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+	MoveToNextFrame();
 
 	m_GameTimer.GetFrameRate(m_pszFrameRate + 12, 37);
 	::SetWindowText(m_hWnd, m_pszFrameRate);
@@ -537,4 +542,17 @@ void CGameFramework::OnResizeBackBuffers()
 	m_pd3dCommandQueue->ExecuteCommandLists(1, ppd3dCommandLists);
 
 	WaitForGpuComplete();
+}
+
+void CGameFramework::MoveToNextFrame()
+{
+	m_nSwapChainBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+
+	UINT64 nFenceValue = ++m_nFenceValues[m_nSwapChainBufferIndex];
+	HRESULT hResult = m_pd3dCommandQueue->Signal(m_pd3dFence, nFenceValue);
+	if (m_pd3dFence->GetCompletedValue() < nFenceValue)
+	{
+		hResult = m_pd3dFence->SetEventOnCompletion(nFenceValue, m_hFenceEvent);
+		::WaitForSingleObject(m_hFenceEvent, INFINITE);
+	}
 }
