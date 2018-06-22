@@ -6,7 +6,6 @@ CShader::CShader()
 {
 }
 
-
 CShader::~CShader()
 {
 	if (m_ppd3dPipelineStates)
