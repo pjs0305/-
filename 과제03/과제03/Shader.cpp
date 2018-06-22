@@ -104,9 +104,8 @@ D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob) //Ç
 	return(d3dShaderByteCode);
 }
 
-
-D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR *pszFileName, LPCSTR pszShaderName,
-	LPCSTR pszShaderProfile, ID3DBlob **ppd3dShaderBlob) //¼ÎÀÌ´õ ¼Ò½º ÄÚµå¸¦ ÄÄÆÄÀÏÇÏ¿© ¹ÙÀÌÆ® ÄÚµå ±¸Á¶Ã¼¸¦ ¹ÝÈ¯ÇÑ´Ù. 
+D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR *pszFileName, LPCSTR pszShaderName, LPCSTR pszShaderProfile, ID3DBlob **ppd3dShaderBlob) 
+//¼ÎÀÌ´õ ¼Ò½º ÄÚµå¸¦ ÄÄÆÄÀÏÇÏ¿© ¹ÙÀÌÆ® ÄÚµå ±¸Á¶Ã¼¸¦ ¹ÝÈ¯ÇÑ´Ù. 
 {
 	UINT nCompileFlags = 0;
 #if defined(_DEBUG)
@@ -121,7 +120,6 @@ D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR *pszFileName, L
 
 	return(d3dShaderByteCode);
 }
-
 
 void CShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature) //±×·¡ÇÈ½º ÆÄÀÌÇÁ¶óÀÎ »óÅÂ °´Ã¼¸¦ »ý¼ºÇÑ´Ù. 
 {
@@ -183,6 +181,7 @@ void CShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 	OnPrepareRender(pd3dCommandList);
 }
 
+
 CDiffusedShader::CDiffusedShader()
 {
 }
@@ -226,4 +225,117 @@ void CDiffusedShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature
 	m_nPipelineStates = 1;
 	m_ppd3dPipelineStates = new ID3D12PipelineState*[m_nPipelineStates];
 	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+}
+
+
+D3D12_INPUT_LAYOUT_DESC CObjectsShader::CreateInputLayout()
+{
+	UINT nInputElementDescs = 2;
+	D3D12_INPUT_ELEMENT_DESC *pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+
+	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	pd3dInputElementDescs[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+
+	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
+	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
+	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+
+	return(d3dInputLayoutDesc);
+}
+
+D3D12_SHADER_BYTECODE CObjectsShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob)
+{
+	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "VSDiffused", "vs_5_1", ppd3dShaderBlob));
+}
+
+D3D12_SHADER_BYTECODE CObjectsShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob)
+{
+	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "PSDiffused", "ps_5_1", ppd3dShaderBlob));
+}
+
+void CObjectsShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature)
+{
+	m_nPipelineStates = 1;
+	m_ppd3dPipelineStates = new ID3D12PipelineState*[m_nPipelineStates];
+	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
+}
+
+void CObjectsShader::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+{
+	//°¡·Îx¼¼·Îx³ôÀÌ°¡ 12x12x12ÀÎ Á¤À°¸éÃ¼ ¸Þ½¬¸¦ »ý¼ºÇÑ´Ù. 
+	CCubeMeshDiffused *pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
+
+	/*x-Ãà, y-Ãà, z-Ãà ¾çÀÇ ¹æÇâÀÇ °´Ã¼ °³¼öÀÌ´Ù. 
+	°¢ °ªÀ» 1¾¿ ´Ã¸®°Å³ª ÁÙÀÌ¸é¼­ ½ÇÇàÇÒ ¶§ ÇÁ·¹ÀÓ ·¹ÀÌÆ®°¡ ¾î¶»°Ô º¯ÇÏ´Â °¡¸¦ »ìÆìº¸±â ¹Ù¶õ´Ù.*/
+	int xObjects = 10, yObjects = 10, zObjects = 10, i = 0;
+
+	//x-Ãà, y-Ãà, z-ÃàÀ¸·Î 21°³¾¿ ÃÑ 21 x 21 x 21 = 9261°³ÀÇ Á¤À°¸éÃ¼¸¦ »ý¼ºÇÏ°í ¹èÄ¡ÇÑ´Ù. 
+	m_nObjects = (xObjects * 2 + 1) * (yObjects * 2 + 1) * (zObjects * 2 + 1);
+
+	m_ppObjects = new CGameObject*[m_nObjects];
+
+	float fxPitch = 12.0f * 2.5f;
+	float fyPitch = 12.0f * 2.5f;
+	float fzPitch = 12.0f * 2.5f;
+
+	CRotatingObject *pRotatingObject = NULL;	for (int x = -xObjects; x <= xObjects; x++)
+	{
+		for (int y = -yObjects; y <= yObjects; y++)
+		{
+			for (int z = -zObjects; z <= zObjects; z++)
+			{
+				pRotatingObject = new CRotatingObject();
+				pRotatingObject->SetMesh(pCubeMesh);
+
+				//°¢ Á¤À°¸éÃ¼ °´Ã¼ÀÇ À§Ä¡¸¦ ¼³Á¤ÇÑ´Ù. 
+				pRotatingObject->SetPosition(fxPitch*x, fyPitch*y, fzPitch*z);
+				pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
+
+				pRotatingObject->SetRotationSpeed(10.0f*(i % 10) + 3.0f);
+
+				m_ppObjects[i++] = pRotatingObject;
+			}
+		}
+	}
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
+}
+
+void CObjectsShader::ReleaseObjects()
+{
+	if (m_ppObjects)
+	{
+		for (int j = 0; j < m_nObjects; j++)
+		{
+			if (m_ppObjects[j]) delete m_ppObjects[j];
+		}
+		delete[] m_ppObjects;
+	}
+}
+
+void CObjectsShader::AnimateObjects(float fTimeElapsed)
+{
+	for (int j = 0; j < m_nObjects; j++)
+	{
+		m_ppObjects[j]->Animate(fTimeElapsed);
+	}
+}
+
+void CObjectsShader::ReleaseUploadBuffers()
+{
+	if (m_ppObjects)
+	{
+		for (int j = 0; j < m_nObjects; j++) m_ppObjects[j]->ReleaseUploadBuffers();
+	}
+}
+
+void CObjectsShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
+{
+	CShader::Render(pd3dCommandList, pCamera);
+	for (int j = 0; j < m_nObjects; j++)
+	{
+		if (m_ppObjects[j])
+		{
+			m_ppObjects[j]->Render(pd3dCommandList, pCamera);
+		}
+	}
 }
