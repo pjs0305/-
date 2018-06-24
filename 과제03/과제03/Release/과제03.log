@@ -1,14 +1,9 @@
-﻿  Camera.cpp
-  GameFramework.cpp
-  GameObject.cpp
-  Mesh.cpp
-  Player.cpp
-  Scene.cpp
-  Shader.cpp
-  과제03.cpp
+﻿  Shader.cpp
+f:\3d게임프로그래밍1\과제\과제03\과제03\shader.cpp(258): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+f:\3d게임프로그래밍1\과제\과제03\과제03\shader.cpp(263): warning C4244: '인수': 'int'에서 'float'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   코드를 생성하고 있습니다.
-  57 of 298 functions (19.1%) were compiled, the rest were copied from previous compilation.
-    16 functions were new in current compilation
-    25 functions had inline decision re-evaluated but remain unchanged
+  0 of 529 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   과제03.vcxproj -> F:\3D게임프로그래밍1\과제\과제03\Release\과제03.exe

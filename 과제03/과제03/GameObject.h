@@ -17,9 +17,11 @@ public:
 	void Release() { if (--m_nReferences <= 0) delete this; }
 
 	XMFLOAT4X4 m_xmf4x4World;
-protected:
 	CMesh *m_pMesh = NULL;
 	CShader *m_pShader = NULL;
+
+	BoundingOrientedBox	m_xmOOBB;
+	CGameObject* m_pObjectCollided = NULL;
 public:
 	void ReleaseUploadBuffers();
 	virtual void SetMesh(CMesh *pMesh);
@@ -27,9 +29,9 @@ public:
 	virtual void Animate(float fTimeElapsed);
 	virtual void OnPrepareRender();
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera* pCamera);
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
 public:
-	void Rotate(XMFLOAT3 *pxmf3Axis, float fAngle);
+	void Rotate(XMFLOAT3& pxmf3Axis, float fAngle);
+	void Move(XMFLOAT3& vDirection, float fSpeed);
 public:
 	//상수 버퍼를 생성한다. 
 	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
@@ -55,6 +57,20 @@ public:
 
 	//게임 객체를 회전(x-축, y-축, z-축)한다. 
 	void Rotate(float fPitch = 10.0f, float fYaw = 10.0f, float fRoll = 10.0f);
+
+	XMFLOAT3 m_xmf3RotationAxis;
+	float m_fRotationSpeed;
+
+	XMFLOAT3 m_xmf3MovingDirection;
+	float m_fMovingSpeed;
+
+	bool m_Delete = FALSE;
+public:
+	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
+	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) { m_xmf3RotationAxis = Vector3::Normalize(xmf3RotationAxis); }
+
+	void SetMovingDirection(XMFLOAT3& xmf3MovingDirection) { m_xmf3MovingDirection = Vector3::Normalize(xmf3MovingDirection); }
+	void SetMovingSpeed(float fSpeed) { m_fMovingSpeed = fSpeed; }
 };
 
 
@@ -64,11 +80,43 @@ class CRotatingObject : public CGameObject
 public:
 	CRotatingObject();
 	virtual ~CRotatingObject();
-private:
-	XMFLOAT3 m_xmf3RotationAxis;
-	float m_fRotationSpeed;
-public:
-	void SetRotationSpeed(float fRotationSpeed) { m_fRotationSpeed = fRotationSpeed; }
-	void SetRotationAxis(XMFLOAT3 xmf3RotationAxis) { m_xmf3RotationAxis = xmf3RotationAxis; }
+
 	virtual void Animate(float fTimeElapsed);
+	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera* pCamera);
+
+	bool m_bBlowingUp = FALSE;
+
+	XMFLOAT4X4 m_pxmf4x4Transforms[EXPLOSION_DEBRISES];
+
+	float m_fElapsedTimes = 0.0f;
+	float m_fDuration = 2.0f;
+	float m_fExplosionSpeed = 50.0f;
+	float m_fExplosionRotation = 720.0f;
+
+	static CMesh *m_pExplosionMesh;
+
+	static void PrepareExplosion(CCubeMeshDiffused *pMesh);
+	static XMFLOAT3 m_pxmf3SphereVectors[EXPLOSION_DEBRISES];
+};
+
+
+class CBulletObject : public CGameObject
+{
+public:
+	CBulletObject() {};
+	virtual ~CBulletObject() {};
+
+	virtual void Animate(float fTimeElapsed);
+
+	float m_fElapsedTimes = 0.0f;
+	float m_fDuration = 1.0f;
+};
+
+class CWallObject : public CGameObject
+{
+public:
+	CWallObject();
+	virtual ~CWallObject();
+public:
+	XMFLOAT4 m_pxmf4WallPlanes[6];
 };

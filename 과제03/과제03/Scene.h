@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "GameObject.h"
+#include "Player.h"
 
 class CScene
 {
@@ -27,9 +28,16 @@ public:
 protected:
 	//씬은 게임 객체들의 집합이다. 게임 객체는 셰이더를 포함한다.
 	ID3D12RootSignature *m_pd3dGraphicsRootSignature = NULL;
-	CCamera *pCamera;
-protected:
+public:
+	//플레이어 객체에 대한 포인터이다. 
+	CPlayer *m_pPlayer = NULL;
+	void SetPlayer(CPlayer* p) { m_pPlayer = p; }
+
 	//배치(Batch) 처리를 하기 위하여 씬을 셰이더들의 리스트로 표현한다. 
-	CInstancingShader *m_pShaders = NULL;
+	CObjectsShader *m_pShaders = NULL;
 	int m_nShaders = 0;
+
+	void CheckCollisions();
+	void CheckObjectByWallCollisions();
+	void CheckObjectByObjectCollisions();
 };

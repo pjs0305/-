@@ -111,9 +111,11 @@ void CPlayer::Update(float fTimeElapsed)
 	m_pCamera->GenerateViewMatrix();
 
 	XMFLOAT3 xmf3Deceleration = Vector3::Normalize(Vector3::ScalarProduct(m_xmf3Velocity, -1.0f));
+
 	float fLength = Vector3::Length(m_xmf3Velocity);
 	float fDeceleration = m_fFriction * fTimeElapsed;
 	if (fDeceleration > fLength) fDeceleration = fLength;
+
 	m_xmf3Velocity = Vector3::Add(m_xmf3Velocity, xmf3Deceleration, fDeceleration);
 }
 

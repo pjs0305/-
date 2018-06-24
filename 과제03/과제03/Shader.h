@@ -2,18 +2,14 @@
 
 #include "GameObject.h"
 #include "Camera.h"
+#include <vector>
+#include <random>
+#include <algorithm>
 
 //게임 객체의 정보를 셰이더에게 넘겨주기 위한 구조체(상수 버퍼)이다. 
 struct CB_GAMEOBJECT_INFO
 {
 	XMFLOAT4X4 m_xmf4x4World;
-};
-
-//인스턴스 정보(게임 객체의 월드 변환 행렬과 객체의 색상)를 위한 구조체이다. 
-struct VS_VB_INSTANCE
-{
-	XMFLOAT4X4 m_xmf4x4Transform;
-	XMFLOAT4 m_xmcColor;
 };
 
 class CShader
@@ -50,26 +46,13 @@ protected:
 	int m_nPipelineStates = 0;
 };
 
-class CDiffusedShader : public CShader
-{
-public:
-	CDiffusedShader();
-	virtual ~CDiffusedShader();
-	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
-	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
-	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
-	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature
-		*pd3dGraphicsRootSignature);
-};
-
 // “CObjectsShader” 클래스는 게임 객체들을 포함하는 셰이더 객체이다. 
 class CObjectsShader : public CShader
 {
 public:
-	CObjectsShader() {}
+	CObjectsShader();
 	virtual ~CObjectsShader() {}
-	virtual void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList
-		*pd3dCommandList);
+	virtual void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
 	virtual void AnimateObjects(float fTimeElapsed);
 	virtual void ReleaseObjects();
 	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
@@ -78,30 +61,28 @@ public:
 	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature);
 	virtual void ReleaseUploadBuffers();
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera);
-protected:
-	CGameObject * *m_ppObjects = NULL;
-	int m_nObjects = 0;
-};
 
-class CInstancingShader : public CObjectsShader
-{
 public:
-	CInstancingShader();
-	virtual ~CInstancingShader();
-	virtual D3D12_INPUT_LAYOUT_DESC CreateInputLayout();
-	virtual D3D12_SHADER_BYTECODE CreateVertexShader(ID3DBlob **ppd3dShaderBlob);
-	virtual D3D12_SHADER_BYTECODE CreatePixelShader(ID3DBlob **ppd3dShaderBlob);
-	virtual void CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature	*pd3dGraphicsRootSignature);
-	virtual void CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void ReleaseShaderVariables();
-	virtual void BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void ReleaseObjects();
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera);
+	std::default_random_engine dre;
+	std::random_device rd1;
+	std::mt19937 gen{ rd1() };
 
-protected:
-	//인스턴스 정점 버퍼와 정점 버퍼 뷰이다. 
-	ID3D12Resource *m_pd3dcbGameObjects = NULL;
-	VS_VB_INSTANCE * m_pcbMappedGameObjects = NULL;
-	D3D12_VERTEX_BUFFER_VIEW m_d3dInstancingBufferView;
+	void CreateEnemy();
+	void DeleteObject();
+	void CreateBullet(XMFLOAT3 Position, XMFLOAT3 Direction);
+	float CreateTime;
+	CCubeMeshDiffused *pRedCubeMesh = NULL;
+	CCubeMeshDiffused *pBlueCubeMesh = NULL;
+	CCubeMeshDiffused *pGreenCubeMesh = NULL;
+	CCubeMeshDiffused *pPinkCubeMesh = NULL;
+
+	//CGameObject * *m_ppObjects = NULL;
+	//int m_nObjects = 0;
+	std::vector<CRotatingObject*> m_vEnemyObject;
+	CWallObject *m_pWallObjects = NULL;
+
+	CCubeMeshDiffused *pBulletCubeMesh = NULL;
+	std::vector<CBulletObject*> m_vPlayerBullet;
+
+	CCubeMeshDiffused *m_pExplosionMesh = NULL;
 };

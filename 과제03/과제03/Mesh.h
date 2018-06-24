@@ -75,17 +75,20 @@ protected:
 	UINT m_nOffset = 0;
 public:
 	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList);
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, UINT nInstances);
-	virtual void Render(ID3D12GraphicsCommandList *pd3dCommandList, UINT nInstances, D3D12_VERTEX_BUFFER_VIEW d3dInstancingBufferView);
+
+	BoundingOrientedBox	m_xmOOBB;
+	void SetOOBB(XMFLOAT3& xmCenter, XMFLOAT3& xmExtents, XMFLOAT4& xmOrientation) { m_xmOOBB = BoundingOrientedBox(xmCenter, xmExtents, xmOrientation); }
 };
+
 
 class CCubeMeshDiffused : public CMesh
 {
 public:
 	//직육면체의 가로, 세로, 깊이의 길이를 지정하여 직육면체 메쉬를 생성한다. 
-	CCubeMeshDiffused(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, float fWidth = 2.0f, float fHeight = 2.0f, float fDepth = 2.0f);
+	CCubeMeshDiffused(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, float fWidth, float fHeight, float fDepth, XMFLOAT4 color = XMFLOAT4(0,0,0,0));
 	virtual ~CCubeMeshDiffused();
 };
+
 
 class CAirplaneMeshDiffused : public CMesh
 {
@@ -93,4 +96,12 @@ public:
 	CAirplaneMeshDiffused(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList*pd3dCommandList, 
 		float fWidth = 20.0f, float fHeight = 20.0f, float fDepth = 4.0f, XMFLOAT4 xmf4Color = XMFLOAT4(1.0f, 1.0f, 0.0f, 0.0f));
 	virtual ~CAirplaneMeshDiffused();
+};
+
+
+class CWallMeshDiffused : public CMesh
+{
+public:
+	CWallMeshDiffused(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList, float fWidth = 4.0f, float fHeight = 4.0f, float fDepth = 4.0f);
+	virtual ~CWallMeshDiffused() { };
 };

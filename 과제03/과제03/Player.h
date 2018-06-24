@@ -2,6 +2,7 @@
 
 #include "GameObject.h"
 #include "Camera.h"
+#include <vector>
 
 #define DIR_FORWARD 0x01
 #define DIR_BACKWARD 0x02
@@ -9,7 +10,6 @@
 #define DIR_RIGHT 0x08
 #define DIR_UP 0x10
 #define DIR_DOWN 0x20
-
 
 class CPlayer : public CGameObject
 {
@@ -86,7 +86,7 @@ public:
 	void Rotate(float x, float y, float z);
 
 	//플레이어의 위치와 회전 정보를 경과 시간에 따라 갱신하는 함수이다. 
-	void Update(float fTimeElapsed);
+	virtual void Update(float fTimeElapsed);
 
 	//플레이어의 위치가 바뀔 때마다 호출되는 함수와 그 함수에서 사용하는 정보를 설정하는 함수이다.
 	virtual void OnPlayerUpdateCallback(float fTimeElapsed) { }
@@ -118,4 +118,8 @@ public:
 	virtual ~CAirplanePlayer();
 	virtual CCamera *ChangeCamera(DWORD nNewCameraMode, float fTimeElapsed);
 	virtual void OnPrepareRender();
+	virtual void Update(float fTimeElapsed);
+
+	bool EnableShot = TRUE;
+	float ShotTime = 0.0f;
 };

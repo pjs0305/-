@@ -23,7 +23,7 @@ public:
 	CWallMesh						*pWallCubeMesh = NULL;
 	CCubeMesh						*pObjectCubeMesh = NULL;
 
-	POINT							m_ptCursorPos;
+	POINT							m_ptCursorPos;	
 	RECT							m_wndRect;
 
 	bool							m_CreateEnemyEable = true;

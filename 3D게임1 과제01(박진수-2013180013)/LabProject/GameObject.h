@@ -37,7 +37,7 @@ public:
 	void SetColor(DWORD dwColor) { m_dwColor = dwColor; }
 	void SetPosition(float x, float y, float z);
 	void SetPosition(XMFLOAT3& xmf3Position);
-
+		
 	void SetMovingDirection(XMFLOAT3& xmf3MovingDirection) { m_xmf3MovingDirection = Vector3::Normalize(xmf3MovingDirection); }
 	void SetMovingSpeed(float fSpeed) { m_fMovingSpeed = fSpeed; }
 	void SetMovingRange(float fRange) { m_fMovingRange = fRange; }

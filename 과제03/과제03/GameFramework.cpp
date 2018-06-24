@@ -98,8 +98,7 @@ void CGameFramework::CreateSwapChain()
 	dxgiSwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	dxgiSwapChainDesc.OutputWindow = m_hWnd;
 	dxgiSwapChainDesc.SampleDesc.Count = (m_bMsaa4xEnable) ? 4 : 1;
-	dxgiSwapChainDesc.SampleDesc.Quality = (m_bMsaa4xEnable) ? (m_nMsaa4xQualityLevels -
-		1) : 0;
+	dxgiSwapChainDesc.SampleDesc.Quality = (m_bMsaa4xEnable) ? (m_nMsaa4xQualityLevels - 1) : 0;
 	dxgiSwapChainDesc.Windowed = TRUE;
 #ifdef _WITH_ONLY_RESIZE_BACKBUFFERS
 	//전체화면 모드에서 바탕화면의 해상도를 바꾸지 않고 후면버퍼의 크기를 바탕화면 크기로 변경한다. 
@@ -286,6 +285,8 @@ void CGameFramework::BuildObjects()
 	m_pPlayer = pAirplanePlayer;
 	m_pCamera = m_pPlayer->GetCamera();
 
+	m_pScene->SetPlayer(m_pPlayer);
+
 	//씬 객체를 생성하기 위하여 필요한 그래픽 명령 리스트들을 명령 큐에 추가한다. 
 	m_pd3dCommandList->Close();
 	ID3D12CommandList *ppd3dCommandLists[] = { m_pd3dCommandList };
@@ -374,6 +375,7 @@ void CGameFramework::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessageID, WPA
 				break;
 			}
 		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessageID, wParam, lParam);
 			break;
 		}
 		break;
@@ -429,16 +431,22 @@ void CGameFramework::ProcessInput()
 	‘Page Up’과 ‘Page Down’ 키를 누르면 플레이어를 위/아래(로컬 y-축)로 이동한다.*/
 	if (::GetKeyboardState(pKeyBuffer))
 	{
-		if (pKeyBuffer[VK_UP] & 0xF0) dwDirection |= DIR_FORWARD;
-		if (pKeyBuffer[VK_DOWN] & 0xF0) dwDirection |= DIR_BACKWARD;
-		if (pKeyBuffer[VK_LEFT] & 0xF0) dwDirection |= DIR_LEFT;
-		if (pKeyBuffer[VK_RIGHT] & 0xF0) dwDirection |= DIR_RIGHT;
-		if (pKeyBuffer[VK_PRIOR] & 0xF0) dwDirection |= DIR_UP;
-		if (pKeyBuffer[VK_NEXT] & 0xF0) dwDirection |= DIR_DOWN;
+		if (pKeyBuffer['W'] & 0xF0) dwDirection |= DIR_FORWARD;
+		if (pKeyBuffer['S'] & 0xF0) dwDirection |= DIR_BACKWARD;
+		if (pKeyBuffer['A'] & 0xF0) dwDirection |= DIR_LEFT;
+		if (pKeyBuffer['D'] & 0xF0) dwDirection |= DIR_RIGHT;
+		if (pKeyBuffer['Q'] & 0xF0) dwDirection |= DIR_UP;
+		if (pKeyBuffer['E'] & 0xF0) dwDirection |= DIR_DOWN;
+		if (pKeyBuffer[VK_SPACE] & 0xF0 && m_pPlayer->EnableShot)
+		{
+			m_pPlayer->EnableShot = FALSE;
+			m_pScene->m_pShaders->CreateBullet(m_pPlayer->GetPosition(), m_pPlayer->GetLookVector());
+		}
 	}
 
 	float cxDelta = 0.0f, cyDelta = 0.0f;
 	POINT ptCursorPos;
+
 	/*마우스를 캡쳐했으면 마우스가 얼마만큼 이동하였는 가를 계산한다. 
 	마우스 왼쪽 또는 오른쪽 버튼이 눌러질 때의 메시지(WM_LBUTTONDOWN, WM_RBUTTONDOWN)를 처리할 때 마우스를 캡쳐하였다. 
 	그러므로 마우스가 캡쳐된 것은 마우스 버튼이 눌려진 상태를 의미한다. 

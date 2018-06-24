@@ -18,7 +18,7 @@ void CScene::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *p
 	m_pd3dGraphicsRootSignature = CreateGraphicsRootSignature(pd3dDevice);
 
 	m_nShaders = 1;
-	m_pShaders = new CInstancingShader[m_nShaders];
+	m_pShaders = new CObjectsShader[m_nShaders];
 	m_pShaders[0].CreateShader(pd3dDevice, m_pd3dGraphicsRootSignature);
 	m_pShaders[0].BuildObjects(pd3dDevice, pd3dCommandList);
 }
@@ -56,6 +56,8 @@ void CScene::AnimateObjects(float fTimeElapsed)
 	{
 		m_pShaders[i].AnimateObjects(fTimeElapsed);
 	}
+
+	CheckCollisions();
 }
 
 void CScene::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
@@ -126,4 +128,161 @@ ID3D12RootSignature *CScene::CreateGraphicsRootSignature(ID3D12Device *pd3dDevic
 	if (pd3dErrorBlob) pd3dErrorBlob->Release();
 
 	return(pd3dGraphicsRootSignature);
+}
+
+// 충돌 체크
+void CScene::CheckCollisions()
+{
+	CheckObjectByWallCollisions();
+	CheckObjectByObjectCollisions();
+}
+
+void CScene::CheckObjectByWallCollisions() // 객체의 벽 충돌
+{
+	for (const auto& Object : m_pShaders->m_vEnemyObject) // 적 객체의 벽 충돌
+	{
+		ContainmentType containType = m_pShaders->m_pWallObjects->m_xmOOBB.Contains(Object->m_xmOOBB);
+
+		switch (containType)
+		{
+		case DISJOINT:
+		case INTERSECTS:
+		{
+			int nPlaneIndex = -1;
+
+			for (int j = 0; j < 6; j++)
+			{
+				PlaneIntersectionType intersectType = Object->m_xmOOBB.Intersects(XMLoadFloat4(&m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[j]));
+
+				if (intersectType == INTERSECTING || intersectType == BACK)
+				{
+					nPlaneIndex = j;
+					break;
+				}
+			}
+			if (nPlaneIndex != -1)
+			{
+				XMVECTOR xmvNormal = XMVectorSet(m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].x,
+					m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].y,
+					m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].z, 0.0f);
+
+				XMVECTOR xmvReflect = XMVector3Reflect(XMLoadFloat3(&Object->m_xmf3MovingDirection), xmvNormal);
+				XMStoreFloat3(&Object->m_xmf3MovingDirection, xmvReflect);
+			}
+			break;
+		}
+		}
+	}
+
+
+	for (const auto& Bullet : m_pShaders->m_vPlayerBullet) // 적 객체의 벽 충돌
+	{
+		ContainmentType containType = m_pShaders->m_pWallObjects->m_xmOOBB.Contains(Bullet->m_xmOOBB);
+
+		switch (containType)
+		{
+		case DISJOINT:
+		case INTERSECTS:
+		{
+			int nPlaneIndex = -1;
+
+			for (int j = 0; j < 6; j++)
+			{
+				PlaneIntersectionType intersectType = Bullet->m_xmOOBB.Intersects(XMLoadFloat4(&m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[j]));
+
+				if (intersectType == INTERSECTING || intersectType == BACK)
+				{
+					nPlaneIndex = j;
+					break;
+				}
+			}
+			if (nPlaneIndex != -1)
+			{
+				XMVECTOR xmvNormal = XMVectorSet(m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].x,
+					m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].y,
+					m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].z, 0.0f);
+
+				XMVECTOR xmvReflect = XMVector3Reflect(XMLoadFloat3(&Bullet->m_xmf3MovingDirection), xmvNormal);
+				XMStoreFloat3(&Bullet->m_xmf3MovingDirection, xmvReflect);
+			}
+			break;
+		}
+		}
+	}
+
+	ContainmentType containType = m_pShaders->m_pWallObjects->m_xmOOBB.Contains(m_pPlayer->m_xmOOBB);
+	switch (containType)
+	{
+	case DISJOINT:
+	case INTERSECTS:
+	{
+		int nPlaneIndex = -1;
+		for (int j = 0; j < 6; j++)
+		{
+			PlaneIntersectionType intersectType = m_pPlayer->m_xmOOBB.Intersects(XMLoadFloat4(&m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[j]));
+
+			if (intersectType == INTERSECTING || intersectType == BACK)
+			{
+				nPlaneIndex = j;
+				break;
+			}
+		}
+		if (nPlaneIndex != -1)
+		{
+			XMFLOAT3 xmvNormal = XMFLOAT3(
+				m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].x,
+				m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].y,
+				m_pShaders->m_pWallObjects->m_pxmf4WallPlanes[nPlaneIndex].z);
+
+			XMFLOAT3 xmf3Shift = XMFLOAT3(0, 0, 0);
+			xmf3Shift = Vector3::Add(xmf3Shift, xmvNormal, 2.f);
+			m_pPlayer->Move(xmf3Shift, true);
+		}
+		break;
+	}
+	}
+}
+
+void CScene::CheckObjectByObjectCollisions() // 오브젝트끼리의 충돌
+{
+	for (const auto& Object : m_pShaders->m_vEnemyObject) Object->m_pObjectCollided = NULL;
+
+	for (UINT i = 0; i < m_pShaders->m_vEnemyObject.size(); i++)
+	{
+		for (UINT j = (i + 1); j < m_pShaders->m_vEnemyObject.size(); j++)
+		{
+			if (m_pShaders->m_vEnemyObject[i]->m_xmOOBB.Intersects(m_pShaders->m_vEnemyObject[j]->m_xmOOBB) )
+			{
+				m_pShaders->m_vEnemyObject[i]->m_pObjectCollided = m_pShaders->m_vEnemyObject[j];
+				m_pShaders->m_vEnemyObject[j]->m_pObjectCollided = m_pShaders->m_vEnemyObject[i];
+			}
+		}
+	}
+
+	for (const auto& Object : m_pShaders->m_vEnemyObject)
+	{
+		if (Object->m_pObjectCollided)
+		{
+			XMFLOAT3 xmf3MovingDirection = Object->m_xmf3MovingDirection;
+			float fMovingSpeed = Object->m_fMovingSpeed;
+			Object->m_xmf3MovingDirection = Object->m_pObjectCollided->m_xmf3MovingDirection;
+			Object->m_fMovingSpeed = Object->m_pObjectCollided->m_fMovingSpeed;
+			Object->m_pObjectCollided->m_xmf3MovingDirection = xmf3MovingDirection;
+			Object->m_pObjectCollided->m_fMovingSpeed = fMovingSpeed;
+			Object->m_pObjectCollided->m_pObjectCollided = NULL;
+			Object->m_pObjectCollided = NULL;
+		}
+	}
+
+	for (const auto& Bullet : m_pShaders->m_vPlayerBullet)
+	{
+		for (const auto& Object : m_pShaders->m_vEnemyObject)
+		{
+			if (Object->m_xmOOBB.Intersects(Bullet->m_xmOOBB))
+			{
+				Object->m_bBlowingUp = TRUE;
+				Bullet->m_Delete = TRUE;
+			}
+		}
+	}
 }

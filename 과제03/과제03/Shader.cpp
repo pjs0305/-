@@ -1,6 +1,9 @@
-#include "stdafx.h"
+Ôªø#include "stdafx.h"
 #include "Shader.h"
+#include "Player.h"
+#include "GameObject.h"
 
+extern float PlayerZ;
 
 CShader::CShader()
 {
@@ -16,7 +19,7 @@ CShader::~CShader()
 	}
 }
 
-D3D12_RASTERIZER_DESC CShader::CreateRasterizerState() //∑°Ω∫≈Õ∂Û¿Ã¿˙ ªÛ≈¬∏¶ º≥¡§«œ±‚ ¿ß«— ±∏¡∂√º∏¶ π›»Ø«—¥Ÿ. 
+D3D12_RASTERIZER_DESC CShader::CreateRasterizerState() //ÎûòÏä§ÌÑ∞ÎùºÏù¥Ï†Ä ÏÉÅÌÉúÎ•º ÏÑ§Ï†ïÌïòÍ∏∞ ÏúÑÌïú Íµ¨Ï°∞Ï≤¥Î•º Î∞òÌôòÌïúÎã§. 
 {
 	D3D12_RASTERIZER_DESC d3dRasterizerDesc;
 	::ZeroMemory(&d3dRasterizerDesc, sizeof(D3D12_RASTERIZER_DESC));
@@ -35,7 +38,7 @@ D3D12_RASTERIZER_DESC CShader::CreateRasterizerState() //∑°Ω∫≈Õ∂Û¿Ã¿˙ ªÛ≈¬∏¶ º≥¡
 	return(d3dRasterizerDesc);
 }
 
-D3D12_DEPTH_STENCIL_DESC CShader::CreateDepthStencilState() //±Ì¿Ã-Ω∫≈ŸΩ« ∞ÀªÁ∏¶ ¿ß«— ªÛ≈¬∏¶ º≥¡§«œ±‚ ¿ß«— ±∏¡∂√º∏¶ π›»Ø«—¥Ÿ. 
+D3D12_DEPTH_STENCIL_DESC CShader::CreateDepthStencilState() //ÍπäÏù¥-Ïä§ÌÖêÏã§ Í≤ÄÏÇ¨Î•º ÏúÑÌïú ÏÉÅÌÉúÎ•º ÏÑ§Ï†ïÌïòÍ∏∞ ÏúÑÌïú Íµ¨Ï°∞Ï≤¥Î•º Î∞òÌôòÌïúÎã§. 
 {
 	D3D12_DEPTH_STENCIL_DESC d3dDepthStencilDesc;
 	::ZeroMemory(&d3dDepthStencilDesc, sizeof(D3D12_DEPTH_STENCIL_DESC));
@@ -57,7 +60,7 @@ D3D12_DEPTH_STENCIL_DESC CShader::CreateDepthStencilState() //±Ì¿Ã-Ω∫≈ŸΩ« ∞ÀªÁ∏¶
 	return(d3dDepthStencilDesc);
 }
 
-D3D12_BLEND_DESC CShader::CreateBlendState() //∫Ì∑ªµ˘ ªÛ≈¬∏¶ º≥¡§«œ±‚ ¿ß«— ±∏¡∂√º∏¶ π›»Ø«—¥Ÿ. 
+D3D12_BLEND_DESC CShader::CreateBlendState() //Î∏îÎ†åÎî© ÏÉÅÌÉúÎ•º ÏÑ§Ï†ïÌïòÍ∏∞ ÏúÑÌïú Íµ¨Ï°∞Ï≤¥Î•º Î∞òÌôòÌïúÎã§. 
 {
 	D3D12_BLEND_DESC d3dBlendDesc;
 	::ZeroMemory(&d3dBlendDesc, sizeof(D3D12_BLEND_DESC));
@@ -77,7 +80,7 @@ D3D12_BLEND_DESC CShader::CreateBlendState() //∫Ì∑ªµ˘ ªÛ≈¬∏¶ º≥¡§«œ±‚ ¿ß«— ±∏¡∂√
 	return(d3dBlendDesc);
 }
 
-D3D12_INPUT_LAYOUT_DESC CShader::CreateInputLayout() //¿‘∑¬ ¡∂∏≥±‚ø°∞‘ ¡§¡° πˆ∆€¿« ±∏¡∂∏¶ æÀ∑¡¡÷±‚ ¿ß«— ±∏¡∂√º∏¶ π›»Ø«—¥Ÿ. 
+D3D12_INPUT_LAYOUT_DESC CShader::CreateInputLayout() //ÏûÖÎ†• Ï°∞Î¶ΩÍ∏∞ÏóêÍ≤å Ï†ïÏ†ê Î≤ÑÌçºÏùò Íµ¨Ï°∞Î•º ÏïåÎ†§Ï£ºÍ∏∞ ÏúÑÌïú Íµ¨Ï°∞Ï≤¥Î•º Î∞òÌôòÌïúÎã§. 
 {
 	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
 	d3dInputLayoutDesc.pInputElementDescs = NULL;
@@ -85,7 +88,7 @@ D3D12_INPUT_LAYOUT_DESC CShader::CreateInputLayout() //¿‘∑¬ ¡∂∏≥±‚ø°∞‘ ¡§¡° πˆ∆€
 	return(d3dInputLayoutDesc);
 }
 
-D3D12_SHADER_BYTECODE CShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob) //¡§¡° ºŒ¿Ã¥ı πŸ¿Ã∆Æ ƒ⁄µÂ∏¶ ª˝º∫(ƒƒ∆ƒ¿œ)«—¥Ÿ. 
+D3D12_SHADER_BYTECODE CShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob) //Ï†ïÏ†ê ÏÖ∞Ïù¥Îçî Î∞îÏù¥Ìä∏ ÏΩîÎìúÎ•º ÏÉùÏÑ±(Ïª¥ÌååÏùº)ÌïúÎã§. 
 {
 	D3D12_SHADER_BYTECODE d3dShaderByteCode;
 	d3dShaderByteCode.BytecodeLength = 0;
@@ -94,7 +97,7 @@ D3D12_SHADER_BYTECODE CShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob) //
 	return(d3dShaderByteCode);
 }
 
-D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob) //«»ºø ºŒ¿Ã¥ı πŸ¿Ã∆Æ ƒ⁄µÂ∏¶ ª˝º∫(ƒƒ∆ƒ¿œ)«—¥Ÿ. 
+D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob) //ÌîΩÏÖÄ ÏÖ∞Ïù¥Îçî Î∞îÏù¥Ìä∏ ÏΩîÎìúÎ•º ÏÉùÏÑ±(Ïª¥ÌååÏùº)ÌïúÎã§. 
 {
 	D3D12_SHADER_BYTECODE d3dShaderByteCode;
 	d3dShaderByteCode.BytecodeLength = 0;
@@ -104,7 +107,7 @@ D3D12_SHADER_BYTECODE CShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob) //«
 }
 
 D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR *pszFileName, LPCSTR pszShaderName, LPCSTR pszShaderProfile, ID3DBlob **ppd3dShaderBlob) 
-//ºŒ¿Ã¥ı º“Ω∫ ƒ⁄µÂ∏¶ ƒƒ∆ƒ¿œ«œø© πŸ¿Ã∆Æ ƒ⁄µÂ ±∏¡∂√º∏¶ π›»Ø«—¥Ÿ. 
+//ÏÖ∞Ïù¥Îçî ÏÜåÏä§ ÏΩîÎìúÎ•º Ïª¥ÌååÏùºÌïòÏó¨ Î∞îÏù¥Ìä∏ ÏΩîÎìú Íµ¨Ï°∞Ï≤¥Î•º Î∞òÌôòÌïúÎã§. 
 {
 	UINT nCompileFlags = 0;
 #if defined(_DEBUG)
@@ -120,7 +123,7 @@ D3D12_SHADER_BYTECODE CShader::CompileShaderFromFile(const WCHAR *pszFileName, L
 	return(d3dShaderByteCode);
 }
 
-void CShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature) //±◊∑°«»Ω∫ ∆ƒ¿Ã«¡∂Û¿Œ ªÛ≈¬ ∞¥√º∏¶ ª˝º∫«—¥Ÿ. 
+void CShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature) //Í∑∏ÎûòÌîΩÏä§ ÌååÏù¥ÌîÑÎùºÏù∏ ÏÉÅÌÉú Í∞ùÏ≤¥Î•º ÏÉùÏÑ±ÌïúÎã§. 
 {
 	ID3DBlob *pd3dVertexShaderBlob = NULL, *pd3dPixelShaderBlob = NULL;
 
@@ -171,7 +174,7 @@ void CShader::ReleaseShaderVariables()
 
 void CShader::OnPrepareRender(ID3D12GraphicsCommandList *pd3dCommandList)
 {
-	//∆ƒ¿Ã«¡∂Û¿Œø° ±◊∑°«»Ω∫ ªÛ≈¬ ∞¥√º∏¶ º≥¡§«—¥Ÿ. 
+	//ÌååÏù¥ÌîÑÎùºÏù∏Ïóê Í∑∏ÎûòÌîΩÏä§ ÏÉÅÌÉú Í∞ùÏ≤¥Î•º ÏÑ§Ï†ïÌïúÎã§. 
 	if (m_ppd3dPipelineStates[0]) pd3dCommandList->SetPipelineState(m_ppd3dPipelineStates[0]);
 }
 
@@ -181,51 +184,135 @@ void CShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamer
 }
 
 
-CDiffusedShader::CDiffusedShader()
+CObjectsShader::CObjectsShader()
 {
+	CreateTime = 0.f;
 }
 
-CDiffusedShader::~CDiffusedShader()
+void CObjectsShader::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
 {
+	// Ï†Å Î©îÏâ¨ ÏÉùÏÑ±
+	float fCWidth = 5.0f, fCHeight = 5.0f, fCDepth = 5.0f;
+
+	pRedCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fCWidth, fCHeight, fCDepth, COLOR_RED);
+	pRedCubeMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fCWidth / 2, fCHeight / 2, fCDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	pGreenCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fCWidth, fCHeight, fCDepth, COLOR_GREEN);
+	pGreenCubeMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fCWidth / 2, fCHeight / 2, fCDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	pBlueCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fCWidth, fCHeight, fCDepth, COLOR_BLUE);
+	pBlueCubeMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fCWidth / 2, fCHeight / 2, fCDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	pPinkCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fCWidth, fCHeight, fCDepth, COLOR_PINK);
+	pPinkCubeMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fCWidth / 2, fCHeight / 2, fCDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	m_pExplosionMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fCWidth/5, fCHeight / 5, fCDepth / 5);
+	CRotatingObject::PrepareExplosion(m_pExplosionMesh);
+
+	// Ï¥ùÏïå Î©îÏâ¨ ÏÉùÏÑ±
+	float fBWidth = 1.0f, fBHeight = 1.0f, fBDepth = 1.0f;
+	pBulletCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, fBWidth, fBHeight, fBDepth, RANDOM_COLOR);
+	pBulletCubeMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fBWidth / 2, fBHeight / 2, fBDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	// Î≤Ω Î©îÏâ¨ ÏÉùÏÑ±
+	float fWWidth = 100.0f, fWHeight = 100.0f, fWDepth = 1000.0f;
+
+	CWallMeshDiffused *pWallMesh = new CWallMeshDiffused(pd3dDevice, pd3dCommandList, fWWidth, fWHeight, fWDepth);
+	pWallMesh->SetOOBB(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(fWWidth / 2, fWHeight / 2, fWDepth / 2), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+
+	m_pWallObjects = new CWallObject();
+	m_pWallObjects->SetMesh(pWallMesh);
+
+	m_pWallObjects->SetPosition(0.f, 0.f, 0.f);
+
+	m_pWallObjects->m_pxmf4WallPlanes[0] = XMFLOAT4(+1.0f, 0.0f, 0.0f, fWWidth / 2);
+	m_pWallObjects->m_pxmf4WallPlanes[1] = XMFLOAT4(-1.0f, 0.0f, 0.0f, fWWidth / 2);
+	m_pWallObjects->m_pxmf4WallPlanes[2] = XMFLOAT4(0.0f, +1.0f, 0.0f, fWHeight / 2);
+	m_pWallObjects->m_pxmf4WallPlanes[3] = XMFLOAT4(0.0f, -1.0f, 0.0f, fWHeight / 2);
+	m_pWallObjects->m_pxmf4WallPlanes[4] = XMFLOAT4(0.0f, 0.0f, +1.0f, fWDepth / 2);
+	m_pWallObjects->m_pxmf4WallPlanes[5] = XMFLOAT4(0.0f, 0.0f, -1.0f, fWDepth / 2);
+	
+	CreateShaderVariables(pd3dDevice, pd3dCommandList);
 }
 
-D3D12_INPUT_LAYOUT_DESC CDiffusedShader::CreateInputLayout()
+void CObjectsShader::CreateEnemy()
 {
-	UINT nInputElementDescs = 2;
-	D3D12_INPUT_ELEMENT_DESC *pd3dInputElementDescs = new
-		D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
+	CRotatingObject *pRotatingObject = NULL;
+	pRotatingObject = new CRotatingObject();
 
-	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
-		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	pd3dInputElementDescs[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
-		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	int r = rand() % 3;
+	switch(r)
+	{
+	case 0:
+		pRotatingObject->SetMesh(pBlueCubeMesh);
+		break;
+	case 1:
+		pRotatingObject->SetMesh(pGreenCubeMesh);
+		break;
+	case 2:
+		pRotatingObject->SetMesh(pPinkCubeMesh);
+		break;
+	}
 
-	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
-	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
-	d3dInputLayoutDesc.NumElements = nInputElementDescs;
+	//Í∞Å Ï†ïÏú°Î©¥Ï≤¥ Í∞ùÏ≤¥Ïùò ÏúÑÏπòÎ•º ÏÑ§Ï†ïÌïúÎã§. 
+	std::uniform_int_distribution<int> uid(-40, 40);
+	std::uniform_int_distribution<int> uid2(-1, 1);
 
-	return(d3dInputLayoutDesc);
+	pRotatingObject->SetPosition(uid(dre), uid(gen), PlayerZ + 100);
+
+	pRotatingObject->SetRotationAxis(XMFLOAT3(1.0f, 0.5f, 0));
+	pRotatingObject->SetRotationSpeed(180.f);
+
+	pRotatingObject->SetMovingDirection(XMFLOAT3(uid2(dre), uid2(gen), 0.0f));
+	pRotatingObject->SetMovingSpeed(10.f);
+
+	m_vEnemyObject.emplace_back(pRotatingObject);
 }
 
-D3D12_SHADER_BYTECODE CDiffusedShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob)
+void CObjectsShader::CreateBullet(XMFLOAT3 Position, XMFLOAT3 Direction)
 {
-	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "VSDiffused", "vs_5_1",
-		ppd3dShaderBlob));
+	CBulletObject *pBulletObject = NULL;
+	pBulletObject = new CBulletObject();
+	pBulletObject->SetMesh(pBulletCubeMesh);
+
+	pBulletObject->SetPosition(Position);
+
+	pBulletObject->SetRotationAxis(XMFLOAT3(1.0f, 0.5f, 0));
+	pBulletObject->SetRotationSpeed(720.f);
+
+	pBulletObject->SetMovingDirection(Direction);
+	pBulletObject->SetMovingSpeed(300.f);
+
+	m_vPlayerBullet.emplace_back(pBulletObject);
 }
 
-D3D12_SHADER_BYTECODE CDiffusedShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob)
+void CObjectsShader::DeleteObject()
 {
-	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "PSDiffused", "ps_5_1",
-		ppd3dShaderBlob));
-}
+	for (auto& Object = m_vEnemyObject.begin(); Object != m_vEnemyObject.end(); )
+	{
+		if ((*Object)->m_Delete)
+		{
+			(*Object)->ReleaseUploadBuffers();
+			delete *Object;
 
-void CDiffusedShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature)
-{
-	m_nPipelineStates = 1;
-	m_ppd3dPipelineStates = new ID3D12PipelineState*[m_nPipelineStates];
-	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
-}
+			Object = m_vEnemyObject.erase(Object);
 
+		}
+		else
+			Object++;
+	}
+
+	for (auto& Bullet = m_vPlayerBullet.begin(); Bullet != m_vPlayerBullet.end(); )
+	{
+		if ((*Bullet)->m_Delete)
+		{
+			(*Bullet)->ReleaseUploadBuffers();
+			delete *Bullet;
+
+			Bullet = m_vPlayerBullet.erase(Bullet);
+
+		}
+		else
+			Bullet++;
+	}
+}
 
 D3D12_INPUT_LAYOUT_DESC CObjectsShader::CreateInputLayout()
 {
@@ -259,214 +346,99 @@ void CObjectsShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature 
 	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
 }
 
-void CObjectsShader::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
+void CObjectsShader::ReleaseUploadBuffers()
 {
-	//∞°∑Œxºº∑Œx≥Ù¿Ã∞° 12x12x12¿Œ ¡§¿∞∏È√º ∏ﬁΩ¨∏¶ ª˝º∫«—¥Ÿ. 
-	CCubeMeshDiffused *pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
+	if (m_pWallObjects)
+		m_pWallObjects->ReleaseUploadBuffers();
 
-	/*x-√‡, y-√‡, z-√‡ æÁ¿« πÊ«‚¿« ∞¥√º ∞≥ºˆ¿Ã¥Ÿ. 
-	∞¢ ∞™¿ª 1æø ¥√∏Æ∞≈≥™ ¡Ÿ¿Ã∏Èº≠ Ω««‡«“ ∂ß «¡∑π¿” ∑π¿Ã∆Æ∞° æÓ∂ª∞‘ ∫Ø«œ¥¬ ∞°∏¶ ªÏ∆Ï∫∏±‚ πŸ∂ı¥Ÿ.*/
-	int xObjects = 20, yObjects = 20, zObjects = 20, i = 0;
-
-	//x-√‡, y-√‡, z-√‡¿∏∑Œ 21∞≥æø √— 21 x 21 x 21 = 9261∞≥¿« ¡§¿∞∏È√º∏¶ ª˝º∫«œ∞Ì πËƒ°«—¥Ÿ. 
-	m_nObjects = (xObjects * 2 + 1) * (yObjects * 2 + 1) * (zObjects * 2 + 1);
-
-	m_ppObjects = new CGameObject*[m_nObjects];
-
-	float fxPitch = 12.0f * 2.5f;
-	float fyPitch = 12.0f * 2.5f;
-	float fzPitch = 12.0f * 2.5f;
-
-	CRotatingObject *pRotatingObject = NULL;	for (int x = -xObjects; x <= xObjects; x++)
+	if (m_vEnemyObject.size())
 	{
-		for (int y = -yObjects; y <= yObjects; y++)
-		{
-			for (int z = -zObjects; z <= zObjects; z++)
-			{
-				pRotatingObject = new CRotatingObject();
-				pRotatingObject->SetMesh(pCubeMesh);
-
-				//∞¢ ¡§¿∞∏È√º ∞¥√º¿« ¿ßƒ°∏¶ º≥¡§«—¥Ÿ. 
-				pRotatingObject->SetPosition(fxPitch*x, fyPitch*y, fzPitch*z);
-				pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-
-				pRotatingObject->SetRotationSpeed(10.0f*(i % 10) + 3.0f);
-
-				m_ppObjects[i++] = pRotatingObject;
-			}
-		}
+		for (const auto& Object : m_vEnemyObject) 
+			Object->ReleaseUploadBuffers();
 	}
-	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-}
 
-void CObjectsShader::ReleaseObjects()
-{
-	if (m_ppObjects)
+	if (m_vPlayerBullet.size())
 	{
-		for (int j = 0; j < m_nObjects; j++)
+		for (const auto& Bullet : m_vPlayerBullet)
 		{
-			if (m_ppObjects[j]) delete m_ppObjects[j];
+			Bullet->ReleaseUploadBuffers();
 		}
-		delete[] m_ppObjects;
 	}
 }
 
 void CObjectsShader::AnimateObjects(float fTimeElapsed)
 {
-	for (int j = 0; j < m_nObjects; j++)
+	if (CreateTime > 1.f)
 	{
-		m_ppObjects[j]->Animate(fTimeElapsed);
+		CreateEnemy();
+		CreateTime = 0;
 	}
+	else
+		CreateTime += fTimeElapsed;
+
+
+	for (const auto& Object : m_vEnemyObject)
+	{
+		Object->Animate(fTimeElapsed);
+	}
+
+	for (const auto& Bullet : m_vPlayerBullet)
+	{
+		Bullet->Animate(fTimeElapsed);
+	}
+
+	if (m_pWallObjects)
+		m_pWallObjects->Animate(fTimeElapsed);
+
+	DeleteObject();
 }
 
-void CObjectsShader::ReleaseUploadBuffers()
+void CObjectsShader::ReleaseObjects()
 {
-	if (m_ppObjects)
+	if (m_pWallObjects)
+		delete m_pWallObjects;
+
+	if (m_vEnemyObject.size())
 	{
-		for (int j = 0; j < m_nObjects; j++) m_ppObjects[j]->ReleaseUploadBuffers();
+		for (auto& b = m_vEnemyObject.begin(); b != m_vEnemyObject.end();)
+		{
+			(*b)->ReleaseUploadBuffers();
+			delete *b;
+
+			b = m_vEnemyObject.erase(b);
+		}
+	}
+
+	if (m_vPlayerBullet.size())
+	{
+		for (auto& b = m_vPlayerBullet.begin(); b != m_vPlayerBullet.end();)
+		{
+			(*b)->ReleaseUploadBuffers();
+			delete *b;
+
+			b = m_vPlayerBullet.erase(b);
+		}
 	}
 }
 
 void CObjectsShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
 {
 	CShader::Render(pd3dCommandList, pCamera);
-	for (int j = 0; j < m_nObjects; j++)
+
+	for (const auto& Object : m_vEnemyObject)
 	{
-		if (m_ppObjects[j])
-		{
-			m_ppObjects[j]->Render(pd3dCommandList, pCamera);
-		}
-	}
-}
-
-
-CInstancingShader::CInstancingShader()
-{
-}
-
-CInstancingShader::~CInstancingShader()
-{
-}
-
-D3D12_INPUT_LAYOUT_DESC CInstancingShader::CreateInputLayout()
-{
-	UINT nInputElementDescs = 7;
-	D3D12_INPUT_ELEMENT_DESC *pd3dInputElementDescs = new D3D12_INPUT_ELEMENT_DESC[nInputElementDescs];
-
-	//¡§¡° ¡§∫∏∏¶ ¿ß«— ¿‘∑¬ ø¯º“¿Ã¥Ÿ. 
-	pd3dInputElementDescs[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	pd3dInputElementDescs[1] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-
-	//¿ŒΩ∫≈œΩÃ ¡§∫∏∏¶ ¿ß«— ¿‘∑¬ ø¯º“¿Ã¥Ÿ. 
-	pd3dInputElementDescs[2] = { "WORLDMATRIX", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-	pd3dInputElementDescs[3] = { "WORLDMATRIX", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-	pd3dInputElementDescs[4] = { "WORLDMATRIX", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-	pd3dInputElementDescs[5] = { "WORLDMATRIX", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-	pd3dInputElementDescs[6] = { "INSTANCECOLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 64, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 };
-
-	D3D12_INPUT_LAYOUT_DESC d3dInputLayoutDesc;
-	d3dInputLayoutDesc.pInputElementDescs = pd3dInputElementDescs;
-	d3dInputLayoutDesc.NumElements = nInputElementDescs;
-
-	return(d3dInputLayoutDesc);
-}
-
-D3D12_SHADER_BYTECODE CInstancingShader::CreateVertexShader(ID3DBlob **ppd3dShaderBlob)
-{
-	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "VSInstancing", "vs_5_1", ppd3dShaderBlob));
-}
-
-D3D12_SHADER_BYTECODE CInstancingShader::CreatePixelShader(ID3DBlob **ppd3dShaderBlob)
-{
-	return(CShader::CompileShaderFromFile(L"Shader.hlsl", "PSInstancing", "ps_5_1",	ppd3dShaderBlob));
-}
-
-void CInstancingShader::CreateShader(ID3D12Device *pd3dDevice, ID3D12RootSignature *pd3dGraphicsRootSignature)
-{
-	m_nPipelineStates = 1;
-	m_ppd3dPipelineStates = new ID3D12PipelineState*[m_nPipelineStates];
-	CShader::CreateShader(pd3dDevice, pd3dGraphicsRootSignature);
-}
-
-void CInstancingShader::CreateShaderVariables(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
-{
-	//¿ŒΩ∫≈œΩ∫ ¡§∫∏∏¶ ¿˙¿Â«“ ¡§¡° πˆ∆€∏¶ æ˜∑ŒµÂ »¸ ¿Ø«¸¿∏∑Œ ª˝º∫«—¥Ÿ. 
-	m_pd3dcbGameObjects = ::CreateBufferResource(pd3dDevice, pd3dCommandList, NULL,	sizeof(VS_VB_INSTANCE) * m_nObjects, 
-		D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, NULL);
-
-	//¡§¡° πˆ∆€(æ˜∑ŒµÂ »¸)ø° ¥Î«— ∆˜¿Œ≈Õ∏¶ ¿˙¿Â«—¥Ÿ. 
-	m_pd3dcbGameObjects->Map(0, NULL, (void **)&m_pcbMappedGameObjects);
-
-	//¡§¡° πˆ∆€ø° ¥Î«— ∫‰∏¶ ª˝º∫«—¥Ÿ. 
-	m_d3dInstancingBufferView.BufferLocation = m_pd3dcbGameObjects->GetGPUVirtualAddress();
-	m_d3dInstancingBufferView.StrideInBytes = sizeof(VS_VB_INSTANCE);
-	m_d3dInstancingBufferView.SizeInBytes = sizeof(VS_VB_INSTANCE) * m_nObjects;
-}
-
-void CInstancingShader::ReleaseShaderVariables()
-{
-	if (m_pd3dcbGameObjects) m_pd3dcbGameObjects->Unmap(0, NULL);
-	if (m_pd3dcbGameObjects) m_pd3dcbGameObjects->Release();
-}
-
-//¿ŒΩ∫≈œΩÃ ¡§∫∏(∞¥√º¿« ø˘µÂ ∫Ø»Ø «‡∑ƒ∞˙ ªˆªÛ)∏¶ ¡§¡° πˆ∆€ø° ∫πªÁ«—¥Ÿ. 
-void CInstancingShader::UpdateShaderVariables(ID3D12GraphicsCommandList *pd3dCommandList)
-{
-	for (int j = 0; j < m_nObjects; j++)
-	{
-		m_pcbMappedGameObjects[j].m_xmcColor = (j % 2) ? XMFLOAT4(0.5f, 0.0f, 0.0f, 0.0f) : XMFLOAT4(0.0f, 0.0f, 0.5f, 0.0f);
-		XMStoreFloat4x4(&m_pcbMappedGameObjects[j].m_xmf4x4Transform, XMMatrixTranspose(XMLoadFloat4x4(&m_ppObjects[j]->m_xmf4x4World)));
-	}
-}
-
-void CInstancingShader::BuildObjects(ID3D12Device *pd3dDevice, ID3D12GraphicsCommandList *pd3dCommandList)
-{
-	int xObjects = 20, yObjects = 20, zObjects = 20, i = 0;
-
-	m_nObjects = (xObjects * 2 + 1) * (yObjects * 2 + 1) * (zObjects * 2 + 1);
-
-	m_ppObjects = new CGameObject*[m_nObjects];
-
-	float fxPitch = 12.0f * 2.5f;
-	float fyPitch = 12.0f * 2.5f;
-	float fzPitch = 12.0f * 2.5f;
-
-	CRotatingObject *pRotatingObject = NULL;
-	for (int x = -xObjects; x <= xObjects; x++)
-	{
-		for (int y = -yObjects; y <= yObjects; y++)
-		{
-			for (int z = -zObjects; z <= zObjects; z++)
-			{
-				pRotatingObject = new CRotatingObject();
-				pRotatingObject->SetPosition(fxPitch*x, fyPitch*y, fzPitch*z);
-				pRotatingObject->SetRotationAxis(XMFLOAT3(0.0f, 1.0f, 0.0f));
-				pRotatingObject->SetRotationSpeed(10.0f*(i % 10));
-				m_ppObjects[i++] = pRotatingObject;
-			}
-		}
+		if (Object)
+			Object->Render(pd3dCommandList, pCamera);
 	}
 
-	//¿ŒΩ∫≈œΩÃ¿ª ªÁøÎ«œø© ∑ª¥ı∏µ«œ±‚ ¿ß«œø© «œ≥™¿« ∞‘¿” ∞¥√º∏∏ ∏ﬁΩ¨∏¶ ∞°¡¯¥Ÿ. 
-	CCubeMeshDiffused *pCubeMesh = new CCubeMeshDiffused(pd3dDevice, pd3dCommandList, 12.0f, 12.0f, 12.0f);
-	m_ppObjects[0]->SetMesh(pCubeMesh);
+	for (const auto& Bullet : m_vPlayerBullet)
+	{
+		if (Bullet)
+			Bullet->Render(pd3dCommandList, pCamera);
+	}
 
-	//¿ŒΩ∫≈œΩÃ¿ª ¿ß«— ¡§¡° πˆ∆€øÕ ∫‰∏¶ ª˝º∫«—¥Ÿ. 
-	CreateShaderVariables(pd3dDevice, pd3dCommandList);
-}
-
-void CInstancingShader::ReleaseObjects()
-{
-	CObjectsShader::ReleaseObjects();
-}
-
-void CInstancingShader::Render(ID3D12GraphicsCommandList *pd3dCommandList, CCamera *pCamera)
-{
-	CObjectsShader::Render(pd3dCommandList, pCamera);
-
-	//∏µÁ ∞‘¿” ∞¥√º¿« ¿ŒΩ∫≈œΩÃ µ•¿Ã≈Õ∏¶ πˆ∆€ø° ¿˙¿Â«—¥Ÿ. 
-	UpdateShaderVariables(pd3dCommandList);
-
-	//«œ≥™¿« ¡§¡° µ•¿Ã≈Õ∏¶ ªÁøÎ«œø© ∏µÁ ∞‘¿” ∞¥√º(¿ŒΩ∫≈œΩ∫)µÈ¿ª ∑ª¥ı∏µ«—¥Ÿ. 
-	m_ppObjects[0]->Render(pd3dCommandList, pCamera, m_nObjects, m_d3dInstancingBufferView);
+	if (m_pWallObjects)
+	{
+		m_pWallObjects->Render(pd3dCommandList, pCamera);
+	}
 }

@@ -2,7 +2,6 @@
 #include "Camera.h"
 #include "Player.h"
 
-
 CCamera::CCamera()
 {
 	m_xmf4x4View = Matrix4x4::Identity();
